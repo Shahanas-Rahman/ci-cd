@@ -27,3 +27,14 @@ jobs:
 
       - name: Build Success Message
         run: echo "Docker image built successfully for commit ${{ github.sha }}"
+
+  deploy:
+    needs: build-and-test # This is the "Guardrail"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Simulate Deployment
+        run: |
+          echo "Connecting to JFrog Artifactory..."
+          echo "Pushing Docker Image: my-react-app:${{ github.sha }}"
+          echo "Updating ArgoCD Manifest..."
+          echo "Deployment to GCP Kubernetes Successful! 🚀"

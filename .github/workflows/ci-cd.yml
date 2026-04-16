@@ -1,59 +1,51 @@
-name: Fullstack CI/CD
+name: Fullstack CI/CD Pro
 
 on:
   push:
     branches: ["main"]
 
 jobs:
-  # --- FRONTEND JOB ---
+  # --- FRONTEND BUILD ---
   build-frontend:
     runs-on: ubuntu-latest
-    # ONLY runs if files in the frontend folder changed
-    defaults:
-      run:
-        working-directory: ./frontend
     steps:
       - uses: actions/checkout@v4
-      - name: Build React
-        run: docker build -t my-frontend:${{ github.sha }} .
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Push to Registry
+      - name: Build and Push Frontend
         run: |
-          docker tag my-frontend:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/my-frontend:latest
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/my-frontend:latest ./frontend
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/my-frontend:latest
 
-  # --- BACKEND JOB ---
+  # --- BACKEND BUILD ---
   build-backend:
     runs-on: ubuntu-latest
-    # ONLY runs if files in the backend folder changed
-    defaults:
-      run:
-        working-directory: ./backend
     steps:
       - uses: actions/checkout@v4
-      - name: Build Go
-        run: docker build -t my-backend:${{ github.sha }} .
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Push to Registry
+      - name: Build and Push Backend
         run: |
-          docker tag my-backend:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/my-backend:latest
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/my-backend:latest ./backend
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/my-backend:latest
 
-  # --- DEPLOY JOB ---
+  # --- DEPLOYMENT (The "ArgoCD" Simulation) ---
   deploy:
-    needs: [build-frontend, build-backend] # Waits for BOTH to finish
+    needs: [build-frontend, build-backend]
     runs-on: ubuntu-latest
-    if: always() # Runs even if one was skipped
     steps:
-      - name: Deploy to K8s
-        run: echo "Deploying fullstack app to GCP..."
+      - name: Notify Deployment
+        run: |
+          echo "Images successfully pushed to Registry!"
+          echo "Triggering ArgoCD sync for GKE Cluster..."
+          echo "Frontend and Backend are now live."

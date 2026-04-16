@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "./assets/vite.svg";
 import heroImg from "./assets/hero.png";
@@ -6,6 +6,23 @@ import "./App.css";
 
 function App() {
 	const [count, setCount] = useState(0);
+	const [textFromBE, setTextFromBE] = useState("");
+
+	useEffect(() => {
+		const callBackendAPI = async () => {
+			const response = await fetch("http://localhost:8081/api/data");
+			const body = await response.text();
+
+			if (response.status !== 200) {
+				throw Error(body.message);
+			}
+			setTextFromBE(body);
+
+			console.log("Response from backend:", body);
+		};
+
+		callBackendAPI();
+	}, []);
 
 	return (
 		<>
@@ -26,6 +43,7 @@ function App() {
 					onClick={() => setCount((count) => count + 1)}
 				>
 					Count is {count}
+					BE text is {textFromBE}
 				</button>
 			</section>
 

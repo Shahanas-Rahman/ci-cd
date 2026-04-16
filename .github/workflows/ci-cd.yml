@@ -1,40 +1,59 @@
-name: Build and Push Docker Image
+name: Fullstack CI/CD
 
 on:
   push:
-    branches: ["main"] # Triggers only on main branch push
+    branches: ["main"]
 
 jobs:
-  build-and-test:
+  # --- FRONTEND JOB ---
+  build-frontend:
     runs-on: ubuntu-latest
-
+    # ONLY runs if files in the frontend folder changed
+    defaults:
+      run:
+        working-directory: ./frontend
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - name: Build React
+        run: docker build -t my-frontend:${{ github.sha }} .
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
         with:
-          node-version: "20"
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Run Linting
+      - name: Push to Registry
         run: |
-          npm install
-          npm run lint
+          docker tag my-frontend:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/my-frontend:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/my-frontend:latest
 
-      - name: Build Docker Image
-        run: docker build -t my-react-app:${{ github.sha }} .
-
-      - name: Build Success Message
-        run: echo "Docker image built successfully for commit ${{ github.sha }}"
-
-  deploy:
-    needs: build-and-test # This is the "Guardrail"
+  # --- BACKEND JOB ---
+  build-backend:
     runs-on: ubuntu-latest
+    # ONLY runs if files in the backend folder changed
+    defaults:
+      run:
+        working-directory: ./backend
     steps:
-      - name: Simulate Deployment
+      - uses: actions/checkout@v4
+      - name: Build Go
+        run: docker build -t my-backend:${{ github.sha }} .
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push to Registry
         run: |
-          echo "Connecting to JFrog Artifactory..."
-          echo "Pushing Docker Image: my-react-app:${{ github.sha }}"
-          echo "Updating ArgoCD Manifest..."
-          echo "Deployment to GCP Kubernetes Successful! 🚀"
+          docker tag my-backend:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/my-backend:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/my-backend:latest
+
+  # --- DEPLOY JOB ---
+  deploy:
+    needs: [build-frontend, build-backend] # Waits for BOTH to finish
+    runs-on: ubuntu-latest
+    if: always() # Runs even if one was skipped
+    steps:
+      - name: Deploy to K8s
+        run: echo "Deploying fullstack app to GCP..."

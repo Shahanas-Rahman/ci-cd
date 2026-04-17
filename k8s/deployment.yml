@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: react-frontend
+spec:
+  replicas: 2 # "I want 2 copies of my app running for safety"
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: YOUR_DOCKERHUB_USERNAME/my-frontend:latest # The image you pushed!
+          ports:
+            - containerPort: 80

@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: YOUR_DOCKERHUB_USERNAME/my-frontend:latest # The image you pushed!
+          image: shahanasrahman0106/my-frontend:latest # The image you pushed!
           ports:
             - containerPort: 80

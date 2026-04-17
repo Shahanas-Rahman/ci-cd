@@ -43,7 +43,7 @@ function App() {
 					onClick={() => setCount((count) => count + 1)}
 				>
 					Count is {count}
-					BE text is {textFromBE}
+					BE text is {textFromBE} empty string means BE is not working
 				</button>
 				<h1>Deployed via ArgoCD</h1>
 			</section>

@@ -45,6 +45,7 @@ function App() {
 					Count is {count}
 					BE text is {textFromBE}
 				</button>
+				<h1>Deployed via ArgoCD</h1>
 			</section>
 
 			<div className="ticks"></div>
